@@ -129,6 +129,7 @@ func (p *ProcessC) Print() {
 }
 ```
 
+See it in action: (see `cmd/example1` for the full thing)
 ```
 // Create a new manager.
 m := refuel.NewManager()
