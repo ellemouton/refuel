@@ -31,6 +31,8 @@ func doThings() error {
 		return err
 	}
 
+	processB.Print()
+
 	// Now add ProcessC which is a provider of InterfaceC and is dependent
 	// on InterfaceC and InterfaceD.
 	processC := newProcC()
@@ -39,33 +41,28 @@ func doThings() error {
 		return err
 	}
 
-	fmt.Println(processC.GetID())
+	processC.Print()
 
 	return nil
 }
 
 type InterfaceA interface {
-	GetID() (string, error)
-	GetThat() (int, error)
+	GetX() string
 }
 
 // ProcessA is a provider of InterfaceA but has no dependencies.
 type ProcessA struct {
-	id string
+	x string
 }
 
 func newProcA() *ProcessA {
 	return &ProcessA{
-		id: "A",
+		x: "A",
 	}
 }
 
-func (p *ProcessA) GetID() (string, error) {
-	return p.id, nil
-}
-
-func (p *ProcessA) GetThat() (int, error) {
-	return 5, nil
+func (p *ProcessA) GetX() string {
+	return p.x
 }
 
 // Provide is a method required by the refueler so that ProcessA can be
@@ -75,8 +72,7 @@ func (p *ProcessA) Provide() InterfaceA {
 }
 
 type InterfaceB interface {
-	GetID() (string, error)
-	GetSomethingElse() (int, error)
+	GetY() string
 }
 
 // ProcessBDeps defines the dependencies of ProcessB.
@@ -87,26 +83,23 @@ type ProcessBDeps struct {
 // ProcessB is a provider of InterfaceB and depends on InterfaceA.
 type ProcessB struct {
 	Backends ProcessBDeps
-	id       string
+	y        string
 }
 
 func newProcB() *ProcessB {
 	return &ProcessB{
-		id: "B",
+		y: "B",
 	}
 }
 
-func (p *ProcessB) GetID() (string, error) {
-	aID, err := p.Backends.A.GetID()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("my ID: %s, A's ID: %s", p.id, aID), nil
+func (p *ProcessB) GetY() string {
+	return p.y
 }
 
-func (p *ProcessB) GetSomethingElse() (int, error) {
-	return 4, nil
+func (p *ProcessB) Print() {
+	x := p.Backends.A.GetX()
+
+	fmt.Printf("x: %s, y: %s\n", x, p.y)
 }
 
 // Provide is a method required by the refueler so that ProcessB can be
@@ -126,28 +119,20 @@ type ProcessCDeps struct {
 // InterfaceB.
 type ProcessC struct {
 	Backends ProcessCDeps
-	id       string
+	z        string
 }
 
 func newProcC() *ProcessC {
 	return &ProcessC{
-		id: "C",
+		z: "C",
 	}
 }
 
-func (p *ProcessC) GetID() (string, error) {
+func (p *ProcessC) Print() {
 	b := p.Backends
 
-	aID, err := b.A.GetID()
-	if err != nil {
-		return "", err
-	}
+	x := b.A.GetX()
+	y := b.B.GetY()
 
-	bID, err := b.B.GetID()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("my ID: %s, A's ID: %s, B's ID %s", p.id, aID, bID),
-		nil
+	fmt.Printf("x: %s, y: %s, z: %s\n", x, y, p.z)
 }
